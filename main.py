@@ -460,6 +460,7 @@ class LabelerWindow(QWidget):
         # if the img has some label already
         if img_name in self.assigned_labels.keys():
 
+
             # label is already there = means tht user want's to remove label
             if (category, label) in self.assigned_labels[img_name]:
                 self.assigned_labels[img_name].remove((category, label))
@@ -485,21 +486,23 @@ class LabelerWindow(QWidget):
 
             # label is not there yet. But the image has some labels already
             else:
-                self.assigned_labels[img_name].append((category, label))
+                # if the category only allows for one label to be set
+                if not self.labels[category]['exclusive']:
+                    self.assigned_labels[img_name].append((category, label))
 
-                # # path to copy/move images
-                # copy_to = os.path.join(self.input_folder, label)
+                    # # path to copy/move images
+                    # copy_to = os.path.join(self.input_folder, label)
 
-                # # copy/move the image into appropriate label folder
-                # if self.mode == 'copy':
-                #     # the image is stored in input_folder, so i can copy it from there (differs from 'move' option)
-                #     shutil.copy(img_path, copy_to)
+                    # # copy/move the image into appropriate label folder
+                    # if self.mode == 'copy':
+                    #     # the image is stored in input_folder, so i can copy it from there (differs from 'move' option)
+                    #     shutil.copy(img_path, copy_to)
 
-                # elif self.mode == 'move':
-                #     # the image doesn't have to be stored in input_folder anymore.
-                #     # get the path where the image is stored
-                #     copy_from = os.path.join(self.input_folder, self.assigned_labels[img_name][0], img_name)
-                #     shutil.copy(copy_from, copy_to)
+                    # elif self.mode == 'move':
+                    #     # the image doesn't have to be stored in input_folder anymore.
+                    #     # get the path where the image is stored
+                    #     copy_from = os.path.join(self.input_folder, self.assigned_labels[img_name][0], img_name)
+                    #     shutil.copy(copy_from, copy_to)
             try:
                 print(self.assigned_labels[img_name])
             except:
@@ -614,7 +617,7 @@ class LabelerWindow(QWidget):
             # write header
             writer.writerow(['img'] + list(self.labels.keys()))
 
-            # write one-hot labels
+            # DO NOT(Chris) write one-hot labels
             for img_name, labels in self.assigned_labels.items():
                 
                 _row = [img_name]

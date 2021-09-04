@@ -10,7 +10,7 @@
     },
     
     "Facing" : {
-        "exclusive": true,
+        "exclusive": false,
         "labels": [
             "Front",
             "Left",
