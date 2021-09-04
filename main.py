@@ -2,6 +2,8 @@ import csv
 import os
 import shutil
 import sys
+import json
+from collections import defaultdict
 
 import numpy as np
 from PyQt5 import QtWidgets
@@ -78,10 +80,10 @@ class SetupWindow(QWidget):
         self.onlyInt = QIntValidator()
 
         #layouts
-        self.formLayout =QFormLayout()
+        self.form_layout =QFormLayout()
 
         #GroupBoxs
-        self.groupBox = QGroupBox()
+        self.group_box = QGroupBox()
 
         #Scrolls
         self.scroll = QScrollArea(self)
@@ -93,7 +95,7 @@ class SetupWindow(QWidget):
         # self.selectFolderDialog = QFileDialog.getExistingDirectory(self, 'Select directory')
         self.setWindowTitle('PyQt5 - Annotation tool - Parameters setup')
         self.setGeometry(0, 0, self.width, self.height)
-        self.centerOnScreen()
+        self.center_on_screen()
 
         self.headline_folder.setGeometry(60, 30, 500, 20)
         self.headline_folder.setObjectName("headline")
@@ -129,7 +131,7 @@ class SetupWindow(QWidget):
         self.next_button.clicked.connect(self.continue_app)
         self.next_button.setObjectName("blueButton")
 
-        # Erro message
+        # Error message
         self.error_message.setGeometry(20, 810, self.width - 20, 20)
         self.error_message.setAlignment(Qt.AlignCenter)
         self.error_message.setStyleSheet('color: red; font-weight: bold')
@@ -157,34 +159,34 @@ class SetupWindow(QWidget):
         radio_label.setObjectName("headline")
         radio_label.move(60, top_margin)
 
-        radiobutton = QRadioButton(
+        radio_button = QRadioButton(
             "csv (Images in selected folder are labeled and then csv file with assigned labels is generated.)", self)
-        radiobutton.setChecked(True)
-        radiobutton.mode = "csv"
-        radiobutton.toggled.connect(self.mode_changed)
-        radiobutton.move(60, top_margin + 35)
+        radio_button.setChecked(True)
+        radio_button.mode = "csv"
+        radio_button.toggled.connect(self.mode_changed)
+        radio_button.move(60, top_margin + 35)
 
         radiobutton = QRadioButton(
             "copy (Creates folder for each label. Labeled images are copied to these folders. Csv is also generated)",
             self)
-        radiobutton.mode = "copy"
-        radiobutton.toggled.connect(self.mode_changed)
-        radiobutton.move(60, top_margin + 65)
+        radio_button.mode = "copy"
+        radio_button.toggled.connect(self.mode_changed)
+        radio_button.move(60, top_margin + 65)
 
-        radiobutton = QRadioButton(
+        radio_button = QRadioButton(
             "move (Creates folder for each label. Labeled images are moved to these folders. Csv is also generated)",
             self)
-        radiobutton.mode = "move"
-        radiobutton.toggled.connect(self.mode_changed)
-        radiobutton.move(60, top_margin + 95)
+        radio_button.mode = "move"
+        radio_button.toggled.connect(self.mode_changed)
+        radio_button.move(60, top_margin + 95)
 
     def mode_changed(self):
         """
         Sets new mode (one of: csv, copy, move)
         """
-        radioButton = self.sender()
-        if radioButton.isChecked():
-            self.mode = radioButton.mode
+        radio_button = self.sender()
+        if radio_button.isChecked():
+            self.mode = radio_button.mode
 
     def pick_new(self):
         """
@@ -199,21 +201,19 @@ class SetupWindow(QWidget):
     def pick_labels_file(self):
         options = QFileDialog.Options()
         # options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self, "Select labels", "",
-                                                  "Text files (*.txt)", options=options)
-        if fileName:
-            with open(fileName) as f:
-                content = f.readlines()
+        filename, _ = QFileDialog.getOpenFileName(self, "Select labels", "",
+                                                  "Json files (*.json)", options=options)
+        if filename:
+            with open(filename) as f:
+                self.labels = json.loads(f.read())
 
-            labels = [line.rstrip('\n') for line in content]
+            print(self.labels)
 
-            print(labels)
-            self.numLabelsInput.setText(str(len(labels)))
-            self.generate_label_inputs()
+            # self.generate_label_inputs()
 
             # fill the input fileds with loaded labels
-            for input, label in zip(self.label_inputs, labels):
-                input.setText(label)
+            # for input, label in zip(self.label_inputs, labels):
+            #    input.setText(label)
 
     def generate_label_inputs(self):
         """
@@ -221,10 +221,10 @@ class SetupWindow(QWidget):
         """
 
         # check that number of labels is not empty
-        if self.numLabelsInput.text().strip() != '':
+        if self.num_labels_is_input.text().strip() != '':
 
             # convert string (number of labels) to integer
-            self.num_labels = int(self.numLabelsInput.text())
+            self.num_labels = int(self.num_labels_is_input.text())
 
             # delete previously generated widgets
             for input, headline in zip(self.label_inputs, self.label_headlines):
@@ -237,20 +237,21 @@ class SetupWindow(QWidget):
             margin_top = 400
 
             # show headline for this step
-            self.groupBox.setTitle('4. Fill in the labels and click "Next"')
-            self.groupBox.setStyleSheet('font-weight: bold')
+            self.group_box.setTitle('4. Fill in the labels and click "Next"')
+            self.group_box.setStyleSheet('font-weight: bold')
 
             # diplsay input fields
             for i in range(self.num_labels):
                 # append widgets to lists
                 self.label_inputs.append(QtWidgets.QLineEdit(self))
                 self.label_headlines.append(QLabel(f'label {i + 1}:', self))
-                self.formLayout.addRow(self.label_headlines[i], self.label_inputs[i])
+                self.form_layout.addRow(self.label_headlines[i], self.label_inputs[i])
 
-            self.groupBox.setLayout(self.formLayout)
-            self.scroll.setWidget(self.groupBox)
+            self.group_box.setLayout(self.form_layout)
+            self.scroll.setWidget(self.group_box)
             self.scroll.setWidgetResizable(True)
-    def centerOnScreen(self):
+
+    def center_on_screen(self):
         """
         Centers the window on the screen.
         """
@@ -265,16 +266,16 @@ class SetupWindow(QWidget):
         if self.selected_folder == '':
             return False, 'Input folder has to be selected (step 1)'
 
-        num_labels_input = self.numLabelsInput.text().strip()
-        if num_labels_input == '' or num_labels_input == '0':
-            return False, 'Number of labels has to be number greater than 0 (step 3).'
+        # num_labels_input = self.numLabelsInput.text().strip()
+        # if num_labels_input == '' or num_labels_input == '0':
+        #     return False, 'Number of labels has to be number greater than 0 (step 3).'
 
-        if len(self.label_inputs) == 0:
-            return False, "You didn't provide any labels. Select number of labels and press \"Ok\""
+        # if len(self.label_inputs) == 0:
+        #     return False, "You didn't provide any labels. Select number of labels and press \"Ok\""
 
-        for label in self.label_inputs:
-            if label.text().strip() == '':
-                return False, 'All label fields has to be filled (step 4).'
+        # for label in self.label_inputs:
+        #     if label.text().strip() == '':
+        #         return False, 'All label fields has to be filled (step 4).'
 
         return True, 'Form ok'
 
@@ -285,13 +286,10 @@ class SetupWindow(QWidget):
         form_is_valid, message = self.check_validity()
 
         if form_is_valid:
-            label_values = []
-            for label in self.label_inputs:
-                label_values.append(label.text().strip())
-
+            
             self.close()
             # show window in full-screen mode (window is maximized)
-            LabelerWindow(label_values, self.selected_folder, self.mode).showMaximized()
+            LabelerWindow(self.labels, self.selected_folder, self.mode).showMaximized()
         else:
             self.error_message.setText(message)
 
@@ -330,12 +328,12 @@ class LabelerWindow(QWidget):
         self.curr_image_headline = QLabel('Current image', self)
         self.csv_note = QLabel('(csv will be also generated automatically after closing the app)', self)
         self.csv_generated_message = QLabel(self)
-        self.show_next_checkbox = QCheckBox("Automatically show next image when labeled", self)
+        # self.show_next_checkbox = QCheckBox("Automatically show next image when labeled", self)
         self.generate_xlsx_checkbox = QCheckBox("Also generate .xlsx file", self)
 
-        # create label folders
-        if mode == 'copy' or mode == 'move':
-            self.create_label_folders(labels, self.input_folder)
+        # # create label folders
+        # if mode == 'copy' or mode == 'move':
+        #     self.create_label_folders(labels, self.input_folder)
 
         # init UI
         self.init_ui()
@@ -350,8 +348,8 @@ class LabelerWindow(QWidget):
         self.init_buttons()
 
         # create 'show next automatically' checkbox
-        self.show_next_checkbox.setChecked(False)
-        self.show_next_checkbox.setGeometry(self.img_panel_width + 20, 10, 400, 20)
+        # self.show_next_checkbox.setChecked(False)
+        # self.show_next_checkbox.setGeometry(self.img_panel_width + 20, 10, 400, 20)
 
         # "create xlsx" checkbox
         self.generate_xlsx_checkbox.setChecked(False)
@@ -425,28 +423,31 @@ class LabelerWindow(QWidget):
 
         # Create button for each label
         x_shift = 0  # variable that helps to compute x-coordinate of button in UI
-        for i, label in enumerate(self.labels):
-            self.label_buttons.append(QtWidgets.QPushButton(label, self))
-            button = self.label_buttons[i]
+        for i, category in enumerate(self.labels.keys()):
+            y_shift = 0
+            for y, label in enumerate(self.labels[category]['labels']):
+                button = QtWidgets.QPushButton(label, self)
+        
+                # create click event (set label)
+                # https://stackoverflow.com/questions/35819538/using-lambda-expression-to-connect-slots-in-pyqt
+                button.clicked.connect(lambda _, category=category, label=label: self.set_label(category, label))
 
-            # create click event (set label)
-            # https://stackoverflow.com/questions/35819538/using-lambda-expression-to-connect-slots-in-pyqt
-            button.clicked.connect(lambda state, x=label: self.set_label(x))
+                self.label_buttons.append(button)
+                # create keyboard shortcut event (set label)
+                # shortcuts start getting overwritten when number of labels >9
+                # label_kbs = QShortcut()
+                # label_kbs.activated.connect(lambda x=label: self.set_label(category, x))
 
-            # create keyboard shortcut event (set label)
-            # shortcuts start getting overwritten when number of labels >9
-            label_kbs = QShortcut(QKeySequence(f"{i+1 % 10}"), self)
-            label_kbs.activated.connect(lambda x=label: self.set_label(x))
+                # place button in GUI (create multiple columns if there is more than 10 button)
+                y_shift = 40 * (y % 10)
+                # if (y != 0 and y % 10 == 0):
+                #     x_shift += 120
+                #     y_shift = 0
 
-            # place button in GUI (create multiple columns if there is more than 10 button)
-            y_shift = (30 + 10) * (i % 10)
-            if (i != 0 and i % 10 == 0):
-                x_shift += 120
-                y_shift = 0
-
-            button.move(self.img_panel_width + 20 + x_shift, y_shift + 120)
-
-    def set_label(self, label):
+                button.move(self.img_panel_width + 20 + x_shift, y_shift + 120)
+            x_shift += 120
+            
+    def set_label(self, category, label):
         """
         Sets the label for just loaded image
         :param label: selected label
@@ -460,63 +461,70 @@ class LabelerWindow(QWidget):
         if img_name in self.assigned_labels.keys():
 
             # label is already there = means tht user want's to remove label
-            if label in self.assigned_labels[img_name]:
-                self.assigned_labels[img_name].remove(label)
+            if (category, label) in self.assigned_labels[img_name]:
+                self.assigned_labels[img_name].remove((category, label))
 
                 # remove key from dictionary if no labels are assigned to this image
                 if len(self.assigned_labels[img_name]) == 0:
                     self.assigned_labels.pop(img_name, None)
 
-                # remove image from appropriate folder
-                if self.mode == 'copy':
-                    os.remove(os.path.join(self.input_folder, label, img_name))
+                # # remove image from appropriate folder
+                # if self.mode == 'copy':
+                #     os.remove(os.path.join(self.input_folder, label, img_name))
 
-                elif self.mode == 'move':
-                    # label was in assigned labels, so I want to remove it from label folder,
-                    # but this was the last label, so move the image to input folder.
-                    # Don't remove it, because it it not save anywehre else
-                    if img_name not in self.assigned_labels.keys():
-                        shutil.move(os.path.join(self.input_folder, label, img_name), self.input_folder)
-                    else:
-                        # label was in assigned labels and the image is store in another label folder,
-                        # so I want to remove it from current label folder
-                        os.remove(os.path.join(self.input_folder, label, img_name))
+                # elif self.mode == 'move':
+                #     # label was in assigned labels, so I want to remove it from label folder,
+                #     # but this was the last label, so move the image to input folder.
+                #     # Don't remove it, because it it not save anywehre else
+                #     if img_name not in self.assigned_labels.keys():
+                #         shutil.move(os.path.join(self.input_folder, label, img_name), self.input_folder)
+                #     else:
+                #         # label was in assigned labels and the image is store in another label folder,
+                #         # so I want to remove it from current label folder
+                #         os.remove(os.path.join(self.input_folder, label, img_name))
 
             # label is not there yet. But the image has some labels already
             else:
-                self.assigned_labels[img_name].append(label)
+                self.assigned_labels[img_name].append((category, label))
 
-                # path to copy/move images
-                copy_to = os.path.join(self.input_folder, label)
+                # # path to copy/move images
+                # copy_to = os.path.join(self.input_folder, label)
 
-                # copy/move the image into appropriate label folder
-                if self.mode == 'copy':
-                    # the image is stored in input_folder, so i can copy it from there (differs from 'move' option)
-                    shutil.copy(img_path, copy_to)
+                # # copy/move the image into appropriate label folder
+                # if self.mode == 'copy':
+                #     # the image is stored in input_folder, so i can copy it from there (differs from 'move' option)
+                #     shutil.copy(img_path, copy_to)
 
-                elif self.mode == 'move':
-                    # the image doesn't have to be stored in input_folder anymore.
-                    # get the path where the image is stored
-                    copy_from = os.path.join(self.input_folder, self.assigned_labels[img_name][0], img_name)
-                    shutil.copy(copy_from, copy_to)
-
+                # elif self.mode == 'move':
+                #     # the image doesn't have to be stored in input_folder anymore.
+                #     # get the path where the image is stored
+                #     copy_from = os.path.join(self.input_folder, self.assigned_labels[img_name][0], img_name)
+                #     shutil.copy(copy_from, copy_to)
+            try:
+                print(self.assigned_labels[img_name])
+            except:
+                print([])
         else:
             # Image has no labels yet. Set new label and copy/move
 
-            self.assigned_labels[img_name] = [label]
-            # move copy images to appropriate directories
-            copy_to = os.path.join(self.input_folder, label)
+            self.assigned_labels[img_name] = [(category, label)]
+            print(self.assigned_labels[img_name])
 
-            if self.mode == 'copy':
-                shutil.copy(img_path, copy_to)
-            elif self.mode == 'move':
-                shutil.move(img_path, copy_to)
+            # # move copy images to appropriate directories
+            # copy_to = os.path.join(self.input_folder, label)
 
-        # load next image
-        if self.show_next_checkbox.isChecked():
-            self.show_next_image()
-        else:
-            self.set_button_color(img_name)
+            # if self.mode == 'copy':
+            #     shutil.copy(img_path, copy_to)
+            # elif self.mode == 'move':
+            #     shutil.move(img_path, copy_to)
+
+        # # load next image
+        # if self.show_next_checkbox.isChecked():
+        #     self.show_next_image()
+        # else:
+        #     self.set_button_color(img_name)
+        
+        self.set_button_color(img_name)
 
     def show_next_image(self):
         """
@@ -604,12 +612,21 @@ class LabelerWindow(QWidget):
             writer = csv.writer(csv_file, delimiter=',')
 
             # write header
-            writer.writerow(['img'] + self.labels)
+            writer.writerow(['img'] + list(self.labels.keys()))
 
             # write one-hot labels
             for img_name, labels in self.assigned_labels.items():
-                labels_one_hot = self.labels_to_zero_one(labels)
-                writer.writerow([img_name] + list(labels_one_hot))
+                
+                _row = [img_name]
+                _dict = defaultdict(list)
+                for category, label in labels:
+                    _dict[category].append(label)
+                for category in _dict.keys():
+                    _row.append(';'.join(_dict[category]))
+
+                # labels_one_hot = self.labels_to_zero_one(labels)
+
+                writer.writerow(_row)
 
         message = f'csv saved to: {csv_file_path}'
         self.csv_generated_message.setText(message)
@@ -644,7 +661,7 @@ class LabelerWindow(QWidget):
         """
 
         if filename in self.assigned_labels.keys():
-            assigned_labels = self.assigned_labels[filename]
+            assigned_labels = [x[1] for x in self.assigned_labels[filename]]
         else:
             assigned_labels = []
 
@@ -680,10 +697,10 @@ class LabelerWindow(QWidget):
 
         return zero_one_arr
 
-    @staticmethod
-    def create_label_folders(labels, folder):
-        for label in labels:
-            make_folder(os.path.join(folder, label))
+    # @staticmethod
+    # def create_label_folders(labels, folder):
+    #     for label in labels:
+    #         make_folder(os.path.join(folder, label))
 
 
 if __name__ == '__main__':

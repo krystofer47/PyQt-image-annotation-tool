@@ -1,0 +1,22 @@
+{
+    "Image Type": {
+        "exclusive": true,
+        "labels": [
+            "Produkt Unverpackt (einzeln)",
+            "Ander Verpackungsart",
+            "Jap",
+            "Nein"
+        ]
+    },
+    
+    "Facing" : {
+        "exclusive": true,
+        "labels": [
+            "Front",
+            "Left",
+            "Back",
+            "Right",
+            "Not-Front"
+        ]
+    }
+}
