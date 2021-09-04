@@ -4,6 +4,7 @@
 data/
 out/
 paper/
+demo/
 
 *.log
 *.out
